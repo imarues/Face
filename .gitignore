@@ -1,0 +1,7 @@
+.theos/
+packages/
+*.deb
+MultiFace.dylib
+release/
+build_*/
+.DS_Store
