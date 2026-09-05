@@ -1,0 +1,9 @@
+Package: com.ikiraplus.multiface
+Name: MultiFace
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Multi-tweak controller for Facebook. Three-finger panel with multilingual UI.
+Maintainer: iKiraPlus
+Author: iKiraPlus
+Section: Tweaks
+Depends: firmware (>= 15.0)
