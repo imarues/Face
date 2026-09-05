@@ -1,0 +1,60 @@
+name: Build MultiFace
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Manager.mm'
+      - 'Makefile'
+      - 'control'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: macos-15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Theos, ldid and iOS SDKs
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export THEOS="$GITHUB_WORKSPACE/theos"
+          if ! command -v ldid >/dev/null 2>&1; then brew install ldid; fi
+          command -v ldid
+          rm -rf "$THEOS"
+          git clone --recursive https://github.com/theos/theos.git "$THEOS"
+          git -C "$THEOS" submodule update --init --recursive
+          test -d "$THEOS/vendor/include"
+          test -d "$THEOS/vendor/lib"
+          rm -rf "$THEOS/sdks"
+          git clone --depth=1 https://github.com/theos/sdks.git "$THEOS/sdks"
+          test -n "$(find "$THEOS/sdks" -maxdepth 1 -type d -name 'iPhoneOS*.sdk' -print -quit)"
+          echo "THEOS=$THEOS" >> "$GITHUB_ENV"
+
+      - name: Build MultiFace dylib
+        shell: bash
+        run: |
+          set -euxo pipefail
+          make clean
+          make FINALPACKAGE=1 -j2
+          MANAGER="$(find .theos -type f -name 'MultiFace.dylib' ! -path '*.dSYM/*' -print -quit)"
+          test -n "$MANAGER"
+          file "$MANAGER"
+          xcrun lipo -archs "$MANAGER" | grep -qw arm64
+          xcrun otool -hv "$MANAGER" | grep -q DYLIB
+          mkdir -p release
+          cp "$MANAGER" release/MultiFace.dylib
+          cd release
+          shasum -a 256 MultiFace.dylib > SHA256SUMS.txt
+
+      - name: Upload MultiFace artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MultiFace-Manager
+          path: release/
+          if-no-files-found: error
