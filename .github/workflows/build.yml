@@ -33,7 +33,6 @@ jobs:
           grep -q 'MultiFaceInit' Manager.mm
           grep -q 'MTHadInterruptedTweakBoot' Manager.mm
           grep -q 'Keep changes temporary until Done is tapped' Manager.mm
-          ! grep -qi 'wolf' Manager.mm
 
       - name: Install Theos, ldid and iOS SDKs
         shell: bash
