@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'Manager.mm'
+      - 'Manager.mm.gz.b64'
       - 'Makefile'
       - 'control'
       - '.github/workflows/build.yml'
@@ -18,6 +18,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Restore MultiFace source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          base64 --decode Manager.mm.gz.b64 | gunzip > Manager.mm
+          test -s Manager.mm
+          grep -q 'MultiFaceInit' Manager.mm
 
       - name: Install Theos, ldid and iOS SDKs
         shell: bash
