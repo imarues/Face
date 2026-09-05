@@ -14,6 +14,4 @@ MultiFace is an iKiraPlus multi-tweak controller for Facebook.
 - iQFace
 - Glow
 
-Wolf has been removed completely from the controller, build configuration, helper scripts, and Feather package.
-
-Both remaining supplied tweaks are arm64 and use the CydiaSubstrate/ElleKit compatibility runtime. The Feather package includes `CydiaSubstrate.dylib` alongside `MultiFace.dylib`, `iQFace.dylib`, and `Glow.dylib`.
+Both supplied tweaks are arm64 and use the CydiaSubstrate/ElleKit compatibility runtime. The Feather package includes `CydiaSubstrate.dylib` alongside `MultiFace.dylib`, `iQFace.dylib`, and `Glow.dylib`.
