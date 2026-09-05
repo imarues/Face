@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'Manager.mm.gz.b64'
+      - 'scripts/patch_manager_source.py'
       - 'Makefile'
       - 'control'
       - '.github/workflows/build.yml'
@@ -19,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Restore MultiFace source
+      - name: Restore and patch MultiFace source
         shell: bash
         run: |
           set -euxo pipefail
@@ -30,7 +31,10 @@ jobs:
           Path('Manager.mm').write_bytes(gzip.decompress(raw))
           PY
           test -s Manager.mm
+          python3 scripts/patch_manager_source.py
           grep -q 'MultiFaceInit' Manager.mm
+          grep -q 'MTHadInterruptedTweakBoot' Manager.mm
+          grep -q 'Do not persist until Done is tapped' Manager.mm
 
       - name: Install Theos, ldid and iOS SDKs
         shell: bash
