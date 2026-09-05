@@ -23,7 +23,12 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          base64 --decode Manager.mm.gz.b64 | gunzip > Manager.mm
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, gzip
+          raw = base64.b64decode(Path('Manager.mm.gz.b64').read_bytes())
+          Path('Manager.mm').write_bytes(gzip.decompress(raw))
+          PY
           test -s Manager.mm
           grep -q 'MultiFaceInit' Manager.mm
 
