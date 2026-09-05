@@ -71,35 +71,6 @@ def patch_dylib_path(path, old_name, new_name):
     return patched
 
 
-def neutralize_wolf_analytics_category(path):
-    """Neutralize Wolf's non-lazy Firebase UIViewController analytics +load.
-    The category still exists in the ordinary Objective-C category list, but
-    the runtime no longer auto-runs its +load while Wolf is supposed to be OFF.
-    """
-    data = bytearray(path.read_bytes())
-    if len(data) < 32 or struct.unpack_from('<I', data, 0)[0] != MH_MAGIC_64:
-        raise RuntimeError(f'{path.name}: expected thin 64-bit little-endian Mach-O')
-    ncmds = struct.unpack_from('<I', data, 16)[0]
-    off = 32
-    changed = 0
-    for _ in range(ncmds):
-        cmd, cmdsize = struct.unpack_from('<II', data, off)
-        if cmd == LC_SEGMENT_64:
-            nsects = struct.unpack_from('<I', data, off + 64)[0]
-            sec_off = off + 72
-            for i in range(nsects):
-                s = sec_off + i * 80
-                sect = cstr16(data[s:s+16])
-                if sect == '__objc_nlcatlist':
-                    new = b'__mf_nlcatlist'
-                    data[s:s+16] = new + b'\0' * (16 - len(new))
-                    changed += 1
-        off += cmdsize
-    if changed:
-        path.write_bytes(data)
-    return changed
-
-
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -111,7 +82,7 @@ def main():
     a = ap.parse_args()
     src = pathlib.Path(a.input_dir); out = pathlib.Path(a.output_dir)
     out.mkdir(parents=True, exist_ok=True)
-    for name in ('iQFace.dylib', 'Glow.dylib', 'Wolf.dylib'):
+    for name in ('iQFace.dylib', 'Glow.dylib'):
         s = src / name; d = out / name
         if not s.exists(): raise SystemExit(f'Missing {s}')
         shutil.copy2(s, d)
@@ -119,10 +90,7 @@ def main():
             d,
             '@rpath/CydiaSubstrate.framework/CydiaSubstrate',
             '@executable_path/CydiaSubstrate.dylib'))
-        print(name, 'initializer sections:', patch_sections(d))
-        if name == 'Wolf.dylib':
-            print(name, 'neutralized non-lazy analytics categories:', neutralize_wolf_analytics_category(d))
-        print(name, 'sha256:', sha(d))
+        print(name, 'initializer sections:', patch_sections(d), 'sha256:', sha(d))
 
 if __name__ == '__main__':
     main()
